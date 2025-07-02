@@ -171,9 +171,32 @@ podman run -p 3000:3000 --env-file .env pluralsight-mcp-server
 
 This project is fully compatible with Podman as a Docker alternative. Podman can use the same `docker-compose.yml` file and Dockerfile without modification. 
 
+**To check if Podman is available on your system:**
+```bash
+podman --version
+podman-compose --version
+```
+
+**Or use the provided script to check both Docker and Podman availability:**
+```bash
+./check-container-runtime.sh
+```
+
+**To test container build compatibility:**
+```bash
+./test-container-build.sh
+```
+
 For systems where `podman-compose` is not available, you can also use:
 - `podman play kube` with Kubernetes YAML files
 - Regular `podman run` commands as shown in the manual build section above
+
+**Troubleshooting Podman Issues:**
+- If you encounter permission issues, try running with `--cgroup-manager=cgroupfs`
+- For rootless operation, ensure proper user session setup: `loginctl enable-linger $USER`
+- On some systems, you may need to alias `docker` to `podman` or install `podman-docker` package for full compatibility
+
+**Note:** On some systems, you may need to alias `docker` to `podman` or install `podman-docker` package for full compatibility with existing Docker workflows.
 
 ## MCP Client Integration
 
