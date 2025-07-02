@@ -9,7 +9,7 @@ A Model Context Protocol (MCP) server that provides integration with the Plurals
 - **Learning Paths**: Access available learning paths and their contents
 - **User Progress**: Track user progress across courses
 - **Skill Assessment**: Get skill assessments and course recommendations
-- **Dockerized**: Fully containerized for easy deployment
+- **Containerized**: Fully containerized for easy deployment with Docker or Podman
 
 ## Available Tools
 
@@ -50,7 +50,7 @@ Get skill assessment information and recommendations.
 ### Prerequisites
 
 - Node.js 18+ (for local development)
-- Docker and Docker Compose (for containerized deployment)
+- Docker and Docker Compose OR Podman and Podman Compose (for containerized deployment)
 - Pluralsight API key (if available)
 
 ### Environment Variables
@@ -93,7 +93,9 @@ npm start
 npm run dev
 ```
 
-### Docker Deployment
+### Container Deployment
+
+#### Docker Deployment
 
 1. Build and run with Docker Compose:
 ```bash
@@ -115,7 +117,31 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Manual Docker Build
+#### Podman Deployment
+
+1. Build and run with Podman Compose:
+```bash
+podman-compose up --build
+```
+
+2. Run in detached mode:
+```bash
+podman-compose up -d --build
+```
+
+3. View logs:
+```bash
+podman-compose logs -f
+```
+
+4. Stop the service:
+```bash
+podman-compose down
+```
+
+### Manual Container Build
+
+#### Docker
 
 ```bash
 # Build the TypeScript code
@@ -127,6 +153,27 @@ docker build -t pluralsight-mcp-server .
 # Run container
 docker run -p 3000:3000 --env-file .env pluralsight-mcp-server
 ```
+
+#### Podman
+
+```bash
+# Build the TypeScript code
+npm run build
+
+# Build Podman image
+podman build -t pluralsight-mcp-server .
+
+# Run container
+podman run -p 3000:3000 --env-file .env pluralsight-mcp-server
+```
+
+### Podman Compatibility Notes
+
+This project is fully compatible with Podman as a Docker alternative. Podman can use the same `docker-compose.yml` file and Dockerfile without modification. 
+
+For systems where `podman-compose` is not available, you can also use:
+- `podman play kube` with Kubernetes YAML files
+- Regular `podman run` commands as shown in the manual build section above
 
 ## MCP Client Integration
 
