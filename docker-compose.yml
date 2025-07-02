@@ -1,0 +1,14 @@
+services:
+  pluralsight-mcp-server:
+    build: .
+    environment:
+      - PLURALSIGHT_API_KEY=${PLURALSIGHT_API_KEY}
+      - PLURALSIGHT_BASE_URL=${PLURALSIGHT_BASE_URL:-https://app.pluralsight.com/api}
+      - MCP_SERVER_PORT=${MCP_SERVER_PORT:-3000}
+    env_file:
+      - .env
+    ports:
+      - "${MCP_SERVER_PORT:-3000}:3000"
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
