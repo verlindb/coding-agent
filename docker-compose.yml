@@ -1,9 +1,9 @@
 services:
-  pluralsight-mcp-server:
+  children-activity-mcp-server:
     build: .
     environment:
-      - PLURALSIGHT_API_KEY=${PLURALSIGHT_API_KEY}
-      - PLURALSIGHT_BASE_URL=${PLURALSIGHT_BASE_URL:-https://app.pluralsight.com/api}
+      - CHILDREN_API_KEY=${CHILDREN_API_KEY}
+      - CHILDREN_BASE_URL=${CHILDREN_BASE_URL:-https://api.children-activities.com/v1}
       - MCP_SERVER_PORT=${MCP_SERVER_PORT:-3000}
     env_file:
       - .env

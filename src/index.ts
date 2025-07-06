@@ -6,29 +6,29 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { PluralsightAPI, PluralsightConfig } from './pluralsight-api.js';
+import { ChildrenAPI, ChildrenApiConfig, AgeCategory } from './children-api.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-class PluralsightMCPServer {
+class ChildrenActivityMCPServer {
   private server: Server;
-  private pluralsightAPI: PluralsightAPI;
+  private childrenAPI: ChildrenAPI;
 
   constructor() {
     this.server = new Server({
-      name: 'pluralsight-mcp-server',
+      name: 'children-activity-mcp-server',
       version: '1.0.0',
     });
 
-    // Initialize Pluralsight API
-    const config: PluralsightConfig = {
-      apiKey: process.env.PLURALSIGHT_API_KEY || '',
-      baseUrl: process.env.PLURALSIGHT_BASE_URL || 'https://app.pluralsight.com/api',
+    // Initialize Children API
+    const config: ChildrenApiConfig = {
+      apiKey: process.env.CHILDREN_API_KEY || '',
+      baseUrl: process.env.CHILDREN_BASE_URL || 'https://api.children-activities.com/v1',
     };
 
-    this.pluralsightAPI = new PluralsightAPI(config);
+    this.childrenAPI = new ChildrenAPI(config);
 
     this.setupHandlers();
   }
@@ -39,80 +39,155 @@ class PluralsightMCPServer {
       return {
         tools: [
           {
-            name: 'search_courses',
-            description: 'Search for Pluralsight courses by query and optional filters',
+            name: 'register_parent',
+            description: 'Register a new parent in the system',
             inputSchema: {
               type: 'object',
               properties: {
-                query: {
+                name: {
                   type: 'string',
-                  description: 'Search query for courses',
+                  description: 'Parent full name',
                 },
-                level: {
+                email: {
                   type: 'string',
-                  description: 'Course difficulty level (Beginner, Intermediate, Advanced)',
-                  enum: ['Beginner', 'Intermediate', 'Advanced'],
+                  description: 'Parent email address',
                 },
-                skillPath: {
+                phone: {
                   type: 'string',
-                  description: 'Skill path to filter by',
-                },
-                tag: {
-                  type: 'string',
-                  description: 'Tag to filter by',
+                  description: 'Parent phone number',
                 },
               },
-              required: ['query'],
+              required: ['name', 'email', 'phone'],
             },
           },
           {
-            name: 'get_course',
-            description: 'Get detailed information about a specific course',
+            name: 'register_child',
+            description: 'Register a new child for a parent',
             inputSchema: {
               type: 'object',
               properties: {
-                courseId: {
+                name: {
                   type: 'string',
-                  description: 'The ID of the course to retrieve',
+                  description: 'Child full name',
+                },
+                age: {
+                  type: 'number',
+                  description: 'Child age (must be between 5-10)',
+                  minimum: 5,
+                  maximum: 10,
+                },
+                parentId: {
+                  type: 'string',
+                  description: 'Parent ID',
                 },
               },
-              required: ['courseId'],
+              required: ['name', 'age', 'parentId'],
             },
           },
           {
-            name: 'get_learning_paths',
-            description: 'Get available learning paths',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-            },
-          },
-          {
-            name: 'get_user_progress',
-            description: 'Get user progress for courses',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                userId: {
-                  type: 'string',
-                  description: 'The ID of the user',
-                },
-              },
-              required: ['userId'],
-            },
-          },
-          {
-            name: 'get_skill_assessment',
-            description: 'Get skill assessment information and recommendations',
+            name: 'get_parent',
+            description: 'Get parent information by ID',
             inputSchema: {
               type: 'object',
               properties: {
-                skillName: {
+                parentId: {
                   type: 'string',
-                  description: 'Name of the skill to assess',
+                  description: 'The ID of the parent to retrieve',
                 },
               },
-              required: ['skillName'],
+              required: ['parentId'],
+            },
+          },
+          {
+            name: 'get_child',
+            description: 'Get child information by ID',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                childId: {
+                  type: 'string',
+                  description: 'The ID of the child to retrieve',
+                },
+              },
+              required: ['childId'],
+            },
+          },
+          {
+            name: 'get_activities',
+            description: 'Get available activities, optionally filtered by age category',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                ageCategory: {
+                  type: 'string',
+                  description: 'Age category to filter by',
+                  enum: ['5-6', '7-8', '9-10'],
+                },
+              },
+            },
+          },
+          {
+            name: 'start_session',
+            description: 'Start a new activity session for a child',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                childId: {
+                  type: 'string',
+                  description: 'The ID of the child',
+                },
+                activityId: {
+                  type: 'string',
+                  description: 'The ID of the activity',
+                },
+              },
+              required: ['childId', 'activityId'],
+            },
+          },
+          {
+            name: 'end_session',
+            description: 'End an active activity session',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                sessionId: {
+                  type: 'string',
+                  description: 'The ID of the session to end',
+                },
+                notes: {
+                  type: 'string',
+                  description: 'Optional notes about the session',
+                },
+              },
+              required: ['sessionId'],
+            },
+          },
+          {
+            name: 'get_child_sessions',
+            description: 'Get all sessions for a specific child',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                childId: {
+                  type: 'string',
+                  description: 'The ID of the child',
+                },
+              },
+              required: ['childId'],
+            },
+          },
+          {
+            name: 'get_parent_children',
+            description: 'Get all children for a specific parent',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                parentId: {
+                  type: 'string',
+                  description: 'The ID of the parent',
+                },
+              },
+              required: ['parentId'],
             },
           },
         ],
@@ -125,16 +200,24 @@ class PluralsightMCPServer {
 
       try {
         switch (name) {
-          case 'search_courses':
-            return await this.handleSearchCourses(args);
-          case 'get_course':
-            return await this.handleGetCourse(args);
-          case 'get_learning_paths':
-            return await this.handleGetLearningPaths(args);
-          case 'get_user_progress':
-            return await this.handleGetUserProgress(args);
-          case 'get_skill_assessment':
-            return await this.handleGetSkillAssessment(args);
+          case 'register_parent':
+            return await this.handleRegisterParent(args);
+          case 'register_child':
+            return await this.handleRegisterChild(args);
+          case 'get_parent':
+            return await this.handleGetParent(args);
+          case 'get_child':
+            return await this.handleGetChild(args);
+          case 'get_activities':
+            return await this.handleGetActivities(args);
+          case 'start_session':
+            return await this.handleStartSession(args);
+          case 'end_session':
+            return await this.handleEndSession(args);
+          case 'get_child_sessions':
+            return await this.handleGetChildSessions(args);
+          case 'get_parent_children':
+            return await this.handleGetParentChildren(args);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -151,74 +234,133 @@ class PluralsightMCPServer {
     });
   }
 
-  private async handleSearchCourses(args: any) {
-    const { query, level, skillPath, tag } = args;
-    const courses = await this.pluralsightAPI.searchCourses(query, {
-      level,
-      skillPath,
-      tag,
-    });
+  private async handleRegisterParent(args: any) {
+    const { name, email, phone } = args;
+    const parent = await this.childrenAPI.registerParent({ name, email, phone });
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(courses, null, 2),
+          text: JSON.stringify(parent, null, 2),
         },
       ],
     };
   }
 
-  private async handleGetCourse(args: any) {
-    const { courseId } = args;
-    const course = await this.pluralsightAPI.getCourse(courseId);
+  private async handleRegisterChild(args: any) {
+    const { name, age, parentId } = args;
+    const child = await this.childrenAPI.registerChild({ name, age, parentId });
 
     return {
       content: [
         {
           type: 'text',
-          text: course ? JSON.stringify(course, null, 2) : 'Course not found',
+          text: JSON.stringify(child, null, 2),
         },
       ],
     };
   }
 
-  private async handleGetLearningPaths(args: any) {
-    const learningPaths = await this.pluralsightAPI.getLearningPaths();
+  private async handleGetParent(args: any) {
+    const { parentId } = args;
+    const parent = await this.childrenAPI.getParentById(parentId);
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(learningPaths, null, 2),
+          text: parent ? JSON.stringify(parent, null, 2) : 'Parent not found',
         },
       ],
     };
   }
 
-  private async handleGetUserProgress(args: any) {
-    const { userId } = args;
-    const progress = await this.pluralsightAPI.getUserProgress(userId);
+  private async handleGetChild(args: any) {
+    const { childId } = args;
+    const child = await this.childrenAPI.getChildById(childId);
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(progress, null, 2),
+          text: child ? JSON.stringify(child, null, 2) : 'Child not found',
         },
       ],
     };
   }
 
-  private async handleGetSkillAssessment(args: any) {
-    const { skillName } = args;
-    const assessment = await this.pluralsightAPI.getSkillAssessment(skillName);
+  private async handleGetActivities(args: any) {
+    const { ageCategory } = args;
+    let activities;
+    
+    if (ageCategory) {
+      activities = await this.childrenAPI.getActivitiesByAgeCategory(ageCategory as AgeCategory);
+    } else {
+      activities = await this.childrenAPI.getAllActivities();
+    }
 
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(assessment, null, 2),
+          text: JSON.stringify(activities, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async handleStartSession(args: any) {
+    const { childId, activityId } = args;
+    const session = await this.childrenAPI.startSession(childId, activityId);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(session, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async handleEndSession(args: any) {
+    const { sessionId, notes } = args;
+    const session = await this.childrenAPI.endSession(sessionId, notes);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(session, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async handleGetChildSessions(args: any) {
+    const { childId } = args;
+    const sessions = await this.childrenAPI.getChildSessions(childId);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(sessions, null, 2),
+        },
+      ],
+    };
+  }
+
+  private async handleGetParentChildren(args: any) {
+    const { parentId } = args;
+    const children = await this.childrenAPI.getParentChildren(parentId);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(children, null, 2),
         },
       ],
     };
@@ -227,10 +369,10 @@ class PluralsightMCPServer {
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('Pluralsight MCP server running on stdio');
+    console.error('Children Activity MCP server running on stdio');
   }
 }
 
 // Start the server
-const server = new PluralsightMCPServer();
+const server = new ChildrenActivityMCPServer();
 server.run().catch(console.error);
