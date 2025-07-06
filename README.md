@@ -1,49 +1,78 @@
-# Pluralsight MCP Server
+# Children Activity MCP Server
 
-A Model Context Protocol (MCP) server that provides integration with the Pluralsight API, allowing AI assistants to access Pluralsight's learning platform functionality.
+A Model Context Protocol (MCP) server that provides integration for managing children's activities with parent registration and age-based categorization (5-6, 7-8, 9-10 years).
 
 ## Features
 
-- **Course Search**: Search for courses with filters by level, skill path, and tags
-- **Course Details**: Get detailed information about specific courses
-- **Learning Paths**: Access available learning paths and their contents
-- **User Progress**: Track user progress across courses
-- **Skill Assessment**: Get skill assessments and course recommendations
+- **Parent Registration**: Register parents with contact information
+- **Child Registration**: Register children with age-based categorization
+- **Age-Based Activities**: Activities categorized by age groups (5-6, 7-8, 9-10)
+- **Session Management**: Start and end activity sessions with tracking
+- **Running Context**: Track active sessions and progress
+- **Activity Types**: Support for running, sports, games, and exercise activities
 - **Containerized**: Fully containerized for easy deployment with Docker or Podman
 
 ## Available Tools
 
-### `search_courses`
-Search for Pluralsight courses by query and optional filters.
+### `register_parent`
+Register a new parent in the system.
 
 **Parameters:**
-- `query` (required): Search query for courses
-- `level` (optional): Course difficulty level (Beginner, Intermediate, Advanced)
-- `skillPath` (optional): Skill path to filter by
-- `tag` (optional): Tag to filter by
+- `name` (required): Parent full name
+- `email` (required): Parent email address
+- `phone` (required): Parent phone number
 
-### `get_course`
-Get detailed information about a specific course.
-
-**Parameters:**
-- `courseId` (required): The ID of the course to retrieve
-
-### `get_learning_paths`
-Get available learning paths.
-
-**Parameters:** None
-
-### `get_user_progress`
-Get user progress for courses.
+### `register_child`
+Register a new child for a parent.
 
 **Parameters:**
-- `userId` (required): The ID of the user
+- `name` (required): Child full name
+- `age` (required): Child age (must be between 5-10)
+- `parentId` (required): Parent ID
 
-### `get_skill_assessment`
-Get skill assessment information and recommendations.
+### `get_parent`
+Get parent information by ID.
 
 **Parameters:**
-- `skillName` (required): Name of the skill to assess
+- `parentId` (required): The ID of the parent to retrieve
+
+### `get_child`
+Get child information by ID.
+
+**Parameters:**
+- `childId` (required): The ID of the child to retrieve
+
+### `get_activities`
+Get available activities, optionally filtered by age category.
+
+**Parameters:**
+- `ageCategory` (optional): Age category to filter by (5-6, 7-8, 9-10)
+
+### `start_session`
+Start a new activity session for a child.
+
+**Parameters:**
+- `childId` (required): The ID of the child
+- `activityId` (required): The ID of the activity
+
+### `end_session`
+End an active activity session.
+
+**Parameters:**
+- `sessionId` (required): The ID of the session to end
+- `notes` (optional): Optional notes about the session
+
+### `get_child_sessions`
+Get all sessions for a specific child.
+
+**Parameters:**
+- `childId` (required): The ID of the child
+
+### `get_parent_children`
+Get all children for a specific parent.
+
+**Parameters:**
+- `parentId` (required): The ID of the parent
 
 ## Setup
 
@@ -51,22 +80,15 @@ Get skill assessment information and recommendations.
 
 - Node.js 18+ (for local development)
 - Docker and Docker Compose OR Podman and Podman Compose (for containerized deployment)
-- Pluralsight API key (if available)
 
 ### Environment Variables
 
-Copy the example environment file and configure your settings:
+The server requires environment variables for API configuration:
 
 ```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-
-```env
-PLURALSIGHT_API_KEY=your_pluralsight_api_key_here
-PLURALSIGHT_BASE_URL=https://app.pluralsight.com/api
-MCP_SERVER_PORT=3000
+# Optional: Set custom API configuration
+CHILDREN_API_KEY=your_api_key_here
+CHILDREN_BASE_URL=https://api.children-activities.com/v1
 ```
 
 ## Installation & Usage
@@ -141,30 +163,24 @@ podman-compose down
 
 ### Manual Container Build
 
-#### Docker
+#### Docker Manual Build
 
 ```bash
-# Build the TypeScript code
-npm run build
+# Build the container
+docker build -t children-activity-mcp-server .
 
-# Build Docker image
-docker build -t pluralsight-mcp-server .
-
-# Run container
-docker run -p 3000:3000 --env-file .env pluralsight-mcp-server
+# Run the container
+docker run -p 3000:3000 children-activity-mcp-server
 ```
 
-#### Podman
+#### Podman Manual Build
 
 ```bash
-# Build the TypeScript code
-npm run build
+# Build the container
+podman build -t children-activity-mcp-server .
 
-# Build Podman image
-podman build -t pluralsight-mcp-server .
-
-# Run container
-podman run -p 3000:3000 --env-file .env pluralsight-mcp-server
+# Run the container
+podman run -p 3000:3000 children-activity-mcp-server
 ```
 
 ### Podman Compatibility Notes
@@ -209,11 +225,11 @@ For Claude Desktop or other MCP clients, add this server to your configuration:
 ```json
 {
   "mcpServers": {
-    "pluralsight": {
+    "children-activity": {
       "command": "node",
-      "args": ["/path/to/pluralsight-mcp-server/dist/index.js"],
+      "args": ["/path/to/children-activity-mcp-server/dist/index.js"],
       "env": {
-        "PLURALSIGHT_API_KEY": "your_api_key_here"
+        "CHILDREN_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -222,13 +238,14 @@ For Claude Desktop or other MCP clients, add this server to your configuration:
 
 ## API Integration
 
-**Note**: This implementation includes mock data for demonstration purposes. To integrate with the real Pluralsight API, you would need:
+The server includes mock data that allows testing all functionality without requiring actual API access. In a production environment, you would configure the API endpoints to connect to your actual children's activity management backend.
 
-1. Valid Pluralsight API credentials
-2. Access to Pluralsight's developer API
-3. Proper authentication setup
+## Age Categories
 
-The current implementation gracefully falls back to mock data when real API calls fail, making it suitable for testing and development.
+The system supports three age categories:
+- **5-6 years**: Fun activities focused on play and basic movement
+- **7-8 years**: More structured activities with skill development
+- **9-10 years**: Advanced activities with competitive elements
 
 ## Development
 
@@ -237,8 +254,8 @@ The current implementation gracefully falls back to mock data when real API call
 ```
 src/
 ├── index.ts              # Main MCP server implementation
-├── pluralsight-api.ts    # Pluralsight API client wrapper
-├── types.ts              # TypeScript type definitions
+├── children-api.ts       # Children API client wrapper
+├── pluralsight-api.ts    # Legacy file (to be removed)
 dist/                     # Compiled JavaScript output
 docker-compose.yml        # Docker Compose configuration
 Dockerfile               # Container definition
@@ -252,7 +269,7 @@ To add new MCP tools:
 
 1. Add the tool definition in the `ListToolsRequestSchema` handler
 2. Add the corresponding handler method
-3. Implement the API integration in `pluralsight-api.ts`
+3. Implement the API integration in `children-api.ts`
 4. Update this documentation
 
 ### Testing

@@ -1,7 +1,7 @@
 {
-  "name": "pluralsight-mcp-server",
+  "name": "children-activity-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for Pluralsight API integration",
+  "description": "MCP server for children's activity management with parent registration",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,7 +9,7 @@
     "dev": "ts-node src/index.ts",
     "watch": "tsc --watch"
   },
-  "keywords": ["mcp", "pluralsight", "api", "server"],
+  "keywords": ["mcp", "children", "activities", "running", "parental", "server"],
   "author": "",
   "license": "MIT",
   "dependencies": {
